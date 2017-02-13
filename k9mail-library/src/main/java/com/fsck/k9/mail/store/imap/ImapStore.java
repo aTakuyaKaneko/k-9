@@ -307,22 +307,41 @@ public class ImapStore extends RemoteStore {
         }
     }
 
+    public static String getHashCode(Object object) {
+        if (object == null) {
+            return "null";
+        }
+
+        return object.getClass().getSimpleName() + "[" + Integer.toHexString(object.hashCode()) + "]";
+    }
+
     ImapConnection getConnection() throws MessagingException {
+        boolean isClosed = false;
         ImapConnection connection;
         while ((connection = pollConnection()) != null) {
             try {
                 connection.executeSimpleCommand(Commands.NOOP);
                 break;
             } catch (IOException ioe) {
+                isClosed = true;
                 connection.close();
             }
         }
 
+        boolean isNew = false;
         if (connection == null) {
             connection = createImapConnection();
+            isNew = true;
         }
+        android.util.Log.d("__CONNECTION__", "ImapStore#getConnection() mConnections=" + getConnectionsSize() + ", newConnection=" + getHashCode(connection) + ", isNew=" + isNew + ", isClosed=" + isClosed);
 
         return connection;
+    }
+
+    private int getConnectionsSize() {
+        synchronized (connections) {
+            return connections.size();
+        }
     }
 
     private ImapConnection pollConnection() {
@@ -335,6 +354,7 @@ public class ImapStore extends RemoteStore {
         if (connection != null && connection.isConnected()) {
             synchronized (connections) {
                 connections.offer(connection);
+                android.util.Log.d("__CONNECTION__", "ImapStore#releaseConnection() mConnections=" + getConnectionsSize() + ", connection=" + getHashCode(connection));
             }
         }
     }

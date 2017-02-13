@@ -180,6 +180,8 @@ class ImapConnection {
     }
 
     private Socket connect() throws GeneralSecurityException, MessagingException, IOException {
+        try {
+        android.util.Log.d("__CONNECTION__", "ImapConnection#connect() " + ImapStore.getHashCode(this));
         Exception connectException = null;
 
         InetAddress[] inetAddresses = InetAddress.getAllByName(settings.getHost());
@@ -193,6 +195,10 @@ class ImapConnection {
         }
 
         throw new MessagingException("Cannot connect to host", connectException);
+        } catch (Exception e) {
+            android.util.Log.d("__CONNECTION__", "ImapConnection#connect() Failed to open!!! " + ImapStore.getHashCode(this));
+            throw e;
+        }
     }
 
     private Socket connectToAddress(InetAddress address) throws NoSuchAlgorithmException, KeyManagementException,
@@ -588,6 +594,13 @@ class ImapConnection {
     }
 
     public void close() {
+        boolean isAvailable = false;
+        if (inputStream != null && outputStream != null && socket != null) {
+            isAvailable = true;
+        }
+        android.util.Log.d("__CONNECTION__", "ImapConnection#close() " + ImapStore.getHashCode(this) + ", isAvailable=" + isAvailable);
+
+
         open = false;
         stacktraceForClose = new Exception();
 
